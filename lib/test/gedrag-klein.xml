@@ -1,0 +1,16 @@
+<testsuite>
+
+	<percentiles>95</percentiles>
+	<!-- maxtimes: semicolon seperated list: 2.0;3.0. The percentage of responsetimes below the maxtime (seconds) will be calculated -->
+	<maxtimes>0.5</maxtimes>
+	<maxtimes_percentiles>95:0.5</maxtimes_percentiles>
+
+<tcl>
+	source [file join $env(PROJECT_DIR) testsuites osb-testrun.tcl]
+</tcl>
+
+<!-- aannames: Z=1, rampup=0 -->
+<tcl>testrun_multi2 testrun_calc -trafo {wusliteebms jmsebms wuslitewus jmswus} -size 1024 -server {linux windows} -loadlevel {L1 L2 L3 L4 L5 L6} -loops 10000 -waitbefore 10 -waitafter 20</tcl>
+
+
+</testsuite>

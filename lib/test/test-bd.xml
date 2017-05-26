@@ -1,0 +1,99 @@
+<testsuite>
+
+	<percentiles>90;95;98</percentiles>
+	<!-- maxtimes: semicolon seperated list: 2.0;3.0. The percentage of responsetimes below the maxtime (seconds) will be calculated -->
+	<maxtimes>2.0</maxtimes>
+	<!-- maxtimess_percentiles: semicolon seperated list; "90:2.0" means that 90% of the responsetimes should be less than 2.0 seconds -->
+	<!-- the use of the less-than sign is not permitted here in XML -->
+	<maxtimes_percentiles>95:1.0</maxtimes_percentiles>
+
+<!--	
+	<graph1>
+		<title>R, X en D tov N (ikt1, Z=1)</title>
+		<xlabel>Aantal gebruikers</xlabel>
+		<y2label>Responsetijd (R)</y2label>
+		<ylabel>Throughput (X, per sec)</ylabel>
+		<line1>
+			<axes>x1y2</axes>
+			<title>Responsetijd</title>
+			<xvalue>nthreads</xvalue>
+			<yvalue>avgRespTime</yvalue>
+			<regexp>testclient-ikt1_202-[0-9]+sec-[0-9]+thr-Z1000-berichten$</regexp>
+		</line1>
+		<line2>
+			<axes>x1y2</axes>
+			<title>R (90%)</title>
+			<xvalue>nthreads</xvalue>
+			<yvalue>percentile90</yvalue>
+			<regexp>testclient-ikt1_202-[0-9]+sec-[0-9]+thr-Z1000-berichten$</regexp>
+		</line2>
+		<line3>
+			<axes>x1y1</axes>
+			<title>Throughput</title>
+			<xvalue>nthreads</xvalue>
+			<yvalue>rate</yvalue>
+			<regexp>testclient-ikt1_202-[0-9]+sec-[0-9]+thr-Z1000-berichten$</regexp>
+		</line3>
+	</graph1>
+-->
+
+<tcl>
+		proc testrun_tc {service datfile duration nthreads loops sleeptime rampup perftest} {
+		  return "	<testrun>
+	    <extrapubdir>\${testrun.$service.threads}thr-Z\${testrun.$service.sleeptime}-$service</extrapubdir>
+			<testomgeving>ikt1_202</testomgeving>
+			<testcase>testclient</testcase>
+			<duration>$duration</duration>
+			<keepalive>true</keepalive>
+			<headerkeepaliveseconds>300</headerkeepaliveseconds>
+			<$service>
+				<klantendat>$datfile</klantendat>
+				<threads>$nthreads</threads>
+				<loops>$loops</loops>
+				<rampup>$rampup</rampup>
+				<sleeptime>$sleeptime</sleeptime>
+				<targetthroughput>10000</targetthroughput>
+				<perftest>$perftest</perftest>
+			</$service>
+			<waitbefore>0</waitbefore>
+			<waitafter>0</waitafter>
+			<waitanalysis>300</waitanalysis>
+	</testrun>"
+		}
+
+		proc testrun_tc_N {service datfile duration lst_nthreads loops sleeptime rampup perftest} {
+  		set lst {}
+	    foreach nthreads $lst_nthreads {
+		    lappend lst [testrun_tc $service $datfile $duration $nthreads $loops $sleeptime $rampup $perftest]
+	    }
+		  return [join $lst "\n"]
+		}		
+</tcl>
+
+<!-- testrun_tc {service datfile duration nthreads loops sleeptime rampup perftest} -->
+<!-- nu even niet perftest mode, zodat alle data wordt bewaard -->
+<tcl>testrun_tc personen klanten-personen-ikt1.dat 60 1 10 0 0 ""</tcl>
+<tcl># testrun_tc berichten klanten-berichten-ikt1-codes.dat 60 1 10 0 0 ""</tcl>
+
+<!-- 1 bsn met verschillende aantallen codes meegeven. Werkt voorlopig alleen met deze bsn -->
+<tcl># testrun_tc berichten klanten-berichten-ikt1-3code.dat 60 1 10 0 0 ""</tcl>
+<tcl># testrun_tc berichten klanten-berichten-ikt1-3code.dat 600 1 10000 0 0 on</tcl>
+
+<tcl># testrun_tc_N berichten klanten-berichten-ikt1-codes.dat 300 [list 1 2] 10000 0 10 on</tcl>
+<tcl># testrun_tc_N berichten klanten-berichten-ikt1-codes.dat 300 [list 5 10] 10000 1000 10 on</tcl>
+
+<tcl>
+proc testje {} {
+	global env
+	set result {}
+	lappend result "Test TCL resultaten"
+	lappend result "PWD: [pwd]"
+	lappend result "env(PROJECT_DIR): $env(PROJECT_DIR)"
+	lappend result "info script: [info script] ***"
+	return [join $result "\n"]
+}
+</tcl>
+
+<tcl># testje</tcl>
+
+</testsuite>

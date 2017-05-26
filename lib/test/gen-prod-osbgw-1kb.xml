@@ -1,0 +1,114 @@
+<testsuite>
+
+	<percentiles>90;95;98</percentiles>
+	<!-- maxtimes: semicolon seperated list: 2.0;3.0. The percentage of responsetimes below the maxtime (seconds) will be calculated -->
+	<maxtimes>0.5</maxtimes>
+	<maxtimes_percentiles>95:0.5</maxtimes_percentiles>
+
+<tcl>
+	source source [file join $env(CRUISE_DIR) checkout lib perflib.tcl]
+
+	# params: -prot, -size, -server, -threads, -loops, -sleeptime, -targetthroughput, -duration, -rampup, -waitbefore, -waitafter	
+	proc testrun {args} {
+			array set par $args
+		  return "	<testrun>
+	    <extrapubdir>$par(-prot)-size$par(-size)-$par(-server)-N${testrun.$par(-prot).threads}-Z${testrun.$par(-prot).sleeptime}-L${testrun.$par(-prot).targetthroughput}</extrapubdir>
+			<testomgeving>acc_$par(-server)</testomgeving>
+			<testcase>osbgw</testcase>
+			<duration>$par(-duration)</duration>
+			<$par(-prot)>
+				<threads>$par(-threads)</threads>
+				<loops>$par(-loops)</loops>
+				<rampup>$par(-rampup)</rampup>
+				<sleeptime>$par(-sleeptime)</sleeptime>
+				<targetthroughput>$par(-targetthroughput)</targetthroughput>
+				<size>$par(-size)</size>
+			</$par(-prot)>
+			<waitbefore>$par(-waitbefore)</waitbefore>
+			<waitafter>$par(-waitafter)</waitafter>
+	</testrun>"
+		}
+
+	# returns string
+	proc testrun_multi {args} {
+		# puts "testrun_multi: $args"
+		# testrun_multi {*}$args ; deze wel, dan blijft lijst goed.
+		# testrun_multi $args ; deze niet, dan steeds meer accolades.
+		set lst_result {}
+		array set ar_par $args
+		set has_list_params 0
+		set par_names [filter85 {x {regexp {^-} $x}} $args]
+		set idx_par_value 1
+		foreach par_name $par_names {
+			if {[llength $ar_par($par_name)] > 1} {
+				# puts "len>1 for $par_name: $ar_par($par_name)"
+				foreach par_val $ar_par($par_name) {
+					# vervang lijst door enkel element en roep recursief aan
+					lappend lst_result [testrun_multi {*}[lreplace $args $idx_par_value $idx_par_value $par_val]] 
+				}
+				# break foreach af, op dit niveau niet nog een loop.
+				set has_list_params 1
+				break
+			}
+			incr idx_par_value 2
+		}
+		# puts "par_names: $par_names"
+		if {!$has_list_params} {
+			# enkelvoudige call
+			# return [test $ar_par(-p1) $ar_par(-p2) $ar_par(-p3) $ar_par(-p4) $ar_par(-p5)]
+			return [testrun {*}$args]
+		} else {
+			return [join $lst_result "\n"]
+		}
+	}	
+</tcl>
+	
+<!--	
+	<testrun>
+	    <extrapubdir>WusLite-N${testrun.wusliteebms.threads}-Z${testrun.wusliteebms.sleeptime}</extrapubdir>
+			<testomgeving>acc_windows</testomgeving>
+			<testcase>osbgw</testcase>
+			<duration>60</duration>
+			<jmsebms>
+				<threads>1</threads>
+				<loops>10000</loops>
+				<rampup>0</rampup>
+				<sleeptime>1000</sleeptime>
+				<targetthroughput>10000</targetthroughput>
+				<size>1024</size>
+			</jmsebms>
+			<wusliteebms>
+				<threads>0</threads>
+				<loops>10000</loops>
+				<rampup>0</rampup>
+				<sleeptime>1000</sleeptime>
+				<targetthroughput>10000</targetthroughput>
+				<size>1024</size>
+			</wusliteebms>
+			<jmswus>
+				<threads>0</threads>
+				<loops>10000</loops>
+				<rampup>0</rampup>
+				<sleeptime>1000</sleeptime>
+				<targetthroughput>10000</targetthroughput>
+				<size>1024</size>
+			</jmswus>
+			<wuslitewus>
+				<threads>0</threads>
+				<loops>10000</loops>
+				<rampup>0</rampup>
+				<sleeptime>1000</sleeptime>
+				<targetthroughput>10000</targetthroughput>
+				<size>1024</size>
+			</wuslitewus>			
+			<waitbefore>10</waitbefore>
+			<waitafter>20</waitafter>
+	</testrun>
+-->
+
+<!-- alle servers, alle protocollen, alleen 1 thread met size=1024 bytes -->
+<tcl>testrun_multi -server {linux windows} -prot {jmsebms jmswus wusliteebms wuslitewus} -size 1024 -threads 1 -loops 10000 -sleeptime 1000 -targetthroughput 10000 -duration 60 -rampup 0 -waitbefore 10 -waitafter 20</tcl>
+
+
+</testsuite>
+
